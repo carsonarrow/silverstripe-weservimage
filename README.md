@@ -1,1 +1,1 @@
-# silverstripe-weservimages
+# silverstripe-weservimage
