@@ -1,0 +1,29 @@
+{
+    "name": "carsonarrow/silverstripe-weservimage",
+    "description": "Allows manipulation of externally hosted images in SilverStripe templates through weserv/images API",
+    "type": "silverstripe-vendormodule",
+    "homepage": "https://github.com/carsonarrow/silverstripe-weservimage",
+    "keywords": [
+        "silverstripe"
+    ],
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Carson Arrowsmith",
+            "homepage": "https://www.carsonarrowsmith.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/carsonarrow/silverstripe-weservimage/issues"
+    },
+    "require": {
+        "silverstripe/framework": "^4"
+    },
+    "autoload": {
+        "psr-4": {
+            "CarsonArrow\\WeservImage\\": "src/"
+        }
+    },
+    "prefer-stable": true,
+    "minimum-stability": "dev"
+}
