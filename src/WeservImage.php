@@ -29,7 +29,7 @@ class WeservImage extends ViewableData
     public function __construct($imageURL)
     {
         $apiUrl = static::config()->get('api_url');
-        $URL = $apiUrl . '?url=' . preg_replace('(^https?://)', '', $imageURL);
+        $URL = $apiUrl . '?url=' . urlencode(preg_replace('(^https?://)', '', $imageURL));
         $this->URL = $URL;
     }
 
