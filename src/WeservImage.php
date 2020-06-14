@@ -1,9 +1,9 @@
 <?php
+
 namespace CarsonArrow\WeservImage;
 
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\View\ViewableData;
-use SilverStripe\Control\HTTP;
 
 /**
  * Class WeservImage
@@ -15,349 +15,295 @@ class WeservImage extends ViewableData
 
     /**
      * Default api url
-     * 
-     * @config
-     *
      * @var string
+     * @config
      */
     private static $api_url = 'https://images.weserv.nl';
 
-    private static $default_image;
+    protected $imageURL;
 
-    protected $URL;
+    protected $options = [];
 
     public function __construct($imageURL)
     {
-        $apiUrl = static::config()->get('api_url');
-        $URL = $apiUrl . '?url=' . preg_replace('(^https?://)', '', $imageURL);
-        $this->URL = $URL;
+        $this->imageURL = $imageURL;
     }
 
     /**
-     * @param string $URL
-     * @return void
+     * Width
+     * Sets the width of the image, in pixels.
+     * @link https://images.weserv.nl/docs/size.html#width
+     * @param integer $width
+     * @return WeservImage $this
      */
-    public function setURL($URL)
+    public function Width(int $width)
     {
-        $this->URL = $URL;
+        return $this->setOption('w', $width);
     }
-    
+
     /**
-     * @return string
+     * Height
+     * Sets the height of the image, in pixels.
+     * @link https://images.weserv.nl/docs/size.html#height
+     * @param integer $height
+     * @return WeservImage $this
      */
+    public function Height(int $height)
+    {
+        return $this->setOption('h', $height);
+    }
+
+    /**
+     * Device pixel ratio
+     * @link https://images.weserv.nl/docs/size.html#device-pixel-ratio
+     * @return WeservImage $this
+     */
+    public function DPR(int $density)
+    {
+        return $this->setOption('dpr', $density);
+    }
+
+    /**
+     * Alignment position
+     * How the image should be aligned.
+     * @link https://images.weserv.nl/docs/crop.html#alignment-position
+     * @param string $alignment
+     * @return WeservImage $this
+     */
+    public function Align(string $alignment)
+    {
+        return $this->setOption('a', $alignment);
+    }
+
+    /**
+     * Rectangle crop
+     * Crops the image to specific dimensions after any other resize operations.
+     * @link https://images.weserv.nl/docs/crop.html#rectangle-crop
+     * @param integer $x
+     * @param integer $y
+     * @param integer $w
+     * @param integer $h
+     * @param bool $precrop
+     * @return WeservImage $this
+     */
+    public function Crop(int $x, int $y, int $w, int $h, bool $precrop = false)
+    {
+        $this
+            ->setOption('cx', $x)
+            ->setOption('cy', $y)
+            ->setOption('cw', $w)
+            ->setOption('ch', $h);
+
+        if ($precrop) $this->setOption('precrop', $precrop);
+
+        return $this;
+    }
+
+    /**
+     * Trim
+     * Trim "boring" pixels from all edges that contain values within a similarity of the top-left pixel.
+     * @link https://images.weserv.nl/docs/crop.html#trim
+     * @param integer $tolerance
+     * @return WeservImage $this
+     */
+    public function Trim(int $tolerance = 10)
+    {
+        return $this->setOption('trim', $tolerance);
+    }
+
+    /**
+     * Mask
+     * Controls the visible and non-visible area of the image.
+     * @link https://images.weserv.nl/docs/mask.html
+     * @param string $type
+     * @param boolean $trim
+     * @param string $bg Background color of the mask
+     * @return WeservImage $this
+     */
+    public function Mask(string $type, bool $trim = false, string $bg = '')
+    {
+        $this->setOption('mask', $type);
+
+        if ($trim) $this->setOption('mtrim', $trim);
+
+        if ($bg) $this->setOption('mbg', $bg);
+
+        return $this;
+    }
+
+    /**
+     * Flip
+     * Flip the image about the vertical Y axis. This always occurs after rotation, if any.
+     * @link https://images.weserv.nl/docs/orientation.html#flip
+     * @return WeservImage $this
+     */
+    public function Flip()
+    {
+        return $this->setOption('flip', true);
+    }
+
+    /**
+     * Flop
+     * Flop the image about the horizontal X axis. This always occurs after rotation, if any.
+     * @link https://images.weserv.nl/docs/orientation.html#flop
+     * @return WeservImage $this
+     */
+    public function Flop()
+    {
+        return $this->setOption('flop', true);
+    }
+
+    /**
+     * Rotate
+     * Rotates the image.
+     * @link https://images.weserv.nl/docs/orientation.html#rotation
+     * @param integer $degrees
+     * @param string $bg Background color when rotating by an angle other than a multiple of 90.
+     * @return WeservImage $this
+     */
+    public function Rotate(int $degrees, string $bg = '')
+    {
+        $this->setOption('ro', $degrees);
+
+        if ($bg) $this->setOption('rbg', $bg);
+
+        return $this;
+    }
+
+    /**
+     * Background
+     * Sets the background color of the image.
+     * @link https://images.weserv.nl/docs/adjustment.html#background
+     * @param string $color
+     * @return WeservImage $this
+     */
+    public function Background(string $color)
+    {
+        return $this->setOption('bg', $color);
+    }
+
+    /**
+     * Blur
+     * Adds a blur effect to the image.
+     * @link https://images.weserv.nl/docs/adjustment.html#blur
+     * @param integer $blur
+     * @return WeservImage $this
+     */
+    public function Blur(int $blur)
+    {
+        return $this->setOption('blur', $blur);
+    }
+
+    /**
+     * Brightness
+     * Adjusts the image brightness.
+     * @link https://images.weserv.nl/docs/adjustment.html#brightness
+     * @param integer $brightness
+     * @return WeservImage $this
+     */
+    public function Brightness(int $brightness)
+    {
+        return $this->setOption('bri', $brightness);
+    }
+
+    /**
+     * Contrast
+     * Adjusts the image contrast.
+     * @link https://images.weserv.nl/docs/adjustment.html#contrast
+     * @param integer $contrast
+     * @return WeservImage $this
+     */
+    public function Contrast(int $contrast)
+    {
+        return $this->setOption('con', $contrast);
+    }
+
+    /**
+     * Filter
+     * Applies a filter effect to the image.
+     * @link https://images.weserv.nl/docs/adjustment.html#filter
+     * @param string $filter
+     * @param string $start
+     * @param string $stop
+     * @return WeservImage $this
+     */
+    public function Filter(string $filter, string $start = '', string $stop = '') {
+        
+        $this->setOption('filt', $filter);
+
+        if ($start) $this->setOption('start', $start);
+
+        if ($stop) $this->setOption('stop', $stop);
+
+        return $this;
+    }
+
+    /**
+     * Gamma
+     * Adjusts the image gamma.
+     * @link https://images.weserv.nl/docs/adjustment.html#gamma
+     * @param float $gamma
+     * @return WeservImage $this
+     */
+    public function Gamma(float $gamma = 2.2)
+    {
+        return $this->setOption('gam', $gamma);
+    }
+
+    /**
+     * Sharpen
+     * Sharpen the image.
+     * @link https://images.weserv.nl/docs/adjustment.html#sharpen
+     * @param float $sharpen
+     * @param float $flat
+     * @param float $jagged
+     * @return WeservImage $this
+     */
+    public function Sharpen(float $sharpen, float $flat = 0, float $jagged = 0)
+    {
+        $this->setOption('sharp', $sharpen);
+
+        if ($flat) $this->setOption('sharpf', $flat);
+
+        if ($jagged) $this->setOption('sharpj', $jagged);
+
+        return $this;
+    }
+
+    /**
+     * Tint
+     * Tint the image using the provided chroma while preserving the image luminance.
+     * @url https://images.weserv.nl/docs/adjustment.html#tint
+     * @param string $tint
+     * @return WeservImage $this
+     */
+    public function Tint(string $tint)
+    {
+        return $this->setOption('tint', $tint);
+    }
+
     public function getURL()
     {
-        return $this->URL;
+        $query = http_build_query(array_merge(['url' => $this->imageURL], $this->options));
+        $URL = $this->config()->get('api_url') . '?' . $query;
+
+        return $URL;
     }
 
-    /**
-     * @return string
-     */
     public function URL()
     {
         return $this->getURL();
     }
 
-    /**
-     * Updates URL
-     *
-     * @param [type] $params
-     * @return void
-     */
-    public function updateURL($params)
+    protected function setOption(string $key, $value)
     {
-
-        if (is_array($params)) {
-        
-            foreach ($params as $param => $value)
-            {
-                $this->URL = HTTP::setGetVar($param, $value, $this->URL);
-            }
-        } else {
-            $this->URL = HTTP::setGetVar($params, null, $this->URL);
-        }
-    }
-
-    /**
-     * Image width
-     *
-     * @param integer $w
-     * @return void
-     */
-    public function Width(int $w)
-    {
-        $this->updateURL(['w' => $w]);
+        $this->options[$key] = $value;
 
         return $this;
     }
 
-    /**
-     * Image height
-     *
-     * @param integer $h
-     * @return void
-     */
-    public function Height(int $h)
+    public function forTemplate()
     {
-        $this->updateURL(['h' => $h]);
-
-        return $this;
+        return $this->renderWith(self::class);
     }
-
-    /**
-     * Image device pixel ratio (DPR)
-     *
-     * @param integer $dpr 1-8
-     * @return void
-     */
-    public function DPR(int $dpr)
-    {
-        if ($dpr >= 1 && $dpr <= 8)
-        {
-            $this->updateURL(['dpr' => $dpr]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Image transformation
-     * https://images.weserv.nl/#trans
-     * 
-     * @param string $type
-     * @return $this
-     */
-    public function Transformation(string $t)
-    {
-        $this->updateURL(['t' => $t]);
-
-        return $this;
-    }
-
-    /**
-     * Image crop
-     * 
-     * @param int $width
-     * @param int $height
-     * @param int $x
-     * @param int $y
-     * @return $this
-     */
-    public function Crop(int $width, int $height, int $x = 0, int $y = 0)
-    {
-        $this->updateURL(['crop' => implode(',', [$width, $height, $x, $y])]);
-
-        return $this;
-    }
-
-    /**
-     * Image crop alignment
-     *
-     * @param string $a
-     * @return void
-     */
-    public function CropAlignment(string $a)
-    {
-        $this->updateURL(['a' => $a]);
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param string $mask
-     * @param boolean $trim
-     * @param string $background
-     * @return void
-     */
-    public function Mask(string $mask, bool $trim = false, string $background = '')
-    {
-        $this->updateURL(['mask' => $mask]);
-
-        if ($trim) $this->updateURL('mtrim');
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param mixed $or
-     * @return void
-     */
-    public function Orientation(mixed $or)
-    {   
-        if ($or === 'auto' || $or % 90 === 0)
-        {
-            $this->updateURL(['or' => $or]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param integer $bri
-     * @return void
-     */
-    public function Brightness(int $bri)
-    {
-        if ($bri >= -100 && $bri <= 100)
-        {
-            $this->updateURL(['bri' => $bri]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param integer $con
-     * @return void
-     */
-    public function Contrast(int $con)
-    {
-        if ($con >= -100 && $con <= 100)
-        {
-            $this->updateURL(['con' => $con]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param float $gam
-     * @return void
-     */
-    public function Gamma(float $gam = 2.2)
-    {
-        if ($gam >= 1 && $gam <= 3)
-        {
-            $this->updateURL(['gam' => $gam]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param float $f
-     * @param float $j
-     * @param integer $r
-     * @return void
-     */
-    public function Sharpen(float $f = 1.0, float $j = 2.0, int $r = 0)
-    {
-        $this->updateURL(['sharp' => implode(',', [$f, $j, $r])]);
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param integer $trim
-     * @return void
-     */
-    public function Trim(int $trim)
-    {
-        if ($trim >= 1 && $trim <= 254)
-        {
-            $this->updateURL(['trim' => $trim]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param string $bg
-     * @return void
-     */
-    public function Background(string $bg)
-    {
-        $this->updateURL(['bg' => $bg]);
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param integer $blur
-     * @return void
-     */
-    public function Blur(int $blur = 0)
-    {
-        $this->updateURL(['blur' => $blur]);
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param string $filt
-     * @return void
-     */
-    public function Filter(string $filt)
-    {
-        $this->updateURL(['filt' => $filt]);
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param integer $q
-     * @return void
-     */
-    public function Quality(int $q) 
-    {
-        $this->updateURL(['q' => $q]);
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param string $output
-     * @return void
-     */
-    public function Output(string $output)
-    {
-        $this->updateURL(['output' => $output]);
-
-        return $this;
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @return void
-     */
-    public function Interlace()
-    {
-        $this->updateURL(['il' => 1]);
-
-        return $this;
-    }
-
-    // /**
-    //  * @return SilverStripe\ORM\FieldType\DBHTMLText
-    //  */
-    // public function forTemplate()
-    // {
-    //     return $this->renderWith(self::class);
-    // }
-
 }

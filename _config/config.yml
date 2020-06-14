@@ -3,5 +3,5 @@ Name: weservimage
 ---
 
 carsonarrow\WeservImage\WeservImage:
-  api_url: https://images.weserv.nl
+  api_url: 'https://images.weserv.nl'
   
